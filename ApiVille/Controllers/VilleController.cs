@@ -29,10 +29,13 @@ namespace ApiVille.Controllers
                 {
                     Id = v.Id,
                     NomeVilla = v.NomeVilla,
+                    ImgCopertina = v.ImgCopertina,
                     Immagine1 = v.Immagine1,
                     Immagine2 = v.Immagine2,
                     Immagine3 = v.Immagine3,
                     Immagine4 = v.Immagine4,
+                    Immagine5 = v.Immagine5,
+                    Immagine6 = v.Immagine6, 
                     Prezzo = v.Prezzo,
                     Localita = v.Localita,
                     Descrizione = v.Descrizione,
@@ -58,10 +61,13 @@ namespace ApiVille.Controllers
             {
                 Id = v.Id,
                 NomeVilla = v.NomeVilla,
+                ImgCopertina = v.ImgCopertina,
                 Immagine1 = v.Immagine1,
                 Immagine2 = v.Immagine2,
                 Immagine3 = v.Immagine3,
                 Immagine4 = v.Immagine4,
+                Immagine5 = v.Immagine5, 
+                Immagine6 = v.Immagine6, 
                 Prezzo = v.Prezzo,
                 Localita = v.Localita,
                 Descrizione = v.Descrizione,
@@ -86,10 +92,13 @@ namespace ApiVille.Controllers
                 {
                     Id = v.Id,
                     NomeVilla = v.NomeVilla,
+                    ImgCopertina = v.ImgCopertina,
                     Immagine1 = v.Immagine1,
                     Immagine2 = v.Immagine2,
                     Immagine3 = v.Immagine3,
                     Immagine4 = v.Immagine4,
+                    Immagine5 = v.Immagine5, 
+                    Immagine6 = v.Immagine6, 
                     Prezzo = v.Prezzo,
                     Localita = v.Localita,
                     Descrizione = v.Descrizione,
@@ -117,10 +126,13 @@ namespace ApiVille.Controllers
             var villa = new Villa
             {
                 NomeVilla = villaDto.NomeVilla,
+                ImgCopertina = villaDto.ImgCopertina,
                 Immagine1 = villaDto.Immagine1,
                 Immagine2 = villaDto.Immagine2,
                 Immagine3 = villaDto.Immagine3,
                 Immagine4 = villaDto.Immagine4,
+                Immagine5 = villaDto.Immagine5, 
+                Immagine6 = villaDto.Immagine6, 
                 Prezzo = villaDto.Prezzo,
                 Localita = villaDto.Localita,
                 CategoriaId = villaDto.CategoriaId,
@@ -146,7 +158,6 @@ namespace ApiVille.Controllers
             if (villa == null)
                 return NotFound();
 
-
             if (villaDto.CategoriaId > 0)
             {
                 var categoriaEsiste = await _context.Categorie.AnyAsync(c => c.Id == villaDto.CategoriaId);
@@ -158,10 +169,13 @@ namespace ApiVille.Controllers
             }
 
             villa.NomeVilla = villaDto.NomeVilla;
+            villa.ImgCopertina = villaDto.ImgCopertina;
             villa.Immagine1 = villaDto.Immagine1;
             villa.Immagine2 = villaDto.Immagine2;
             villa.Immagine3 = villaDto.Immagine3;
             villa.Immagine4 = villaDto.Immagine4;
+            villa.Immagine5 = villaDto.Immagine5;  
+            villa.Immagine6 = villaDto.Immagine6;  
             villa.Prezzo = villaDto.Prezzo;
             villa.Localita = villaDto.Localita;
             villa.Descrizione = villaDto.Descrizione;

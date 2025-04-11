@@ -4,10 +4,13 @@
     {
         public int Id { get; set; }
         public string NomeVilla { get; set; }
+        public string ImgCopertina { get; set; }
         public string Immagine1 { get; set; }
         public string Immagine2 { get; set; }
         public string Immagine3 { get; set; }
         public string Immagine4 { get; set; }
+        public string Immagine5 { get; set; }  
+        public string Immagine6 { get; set; }
         public decimal Prezzo { get; set; }
         public string Localita { get; set; }
         public string Descrizione { get; set; }
