@@ -5,16 +5,12 @@ using System.Collections.Generic;
 using ApiVille.DTOs;
 using ApiVille.Models;
 using ApiVille.Services;
+using ApiVille.Data;
+
 
 namespace ApiVille.Controllers
 {
-    using ApiVille.Data;
-    using ApiVille.DTOs;
-    using ApiVille.Models;
-    using ApiVille.Services;
-    using Microsoft.AspNetCore.Identity;
-    using Microsoft.AspNetCore.Mvc;
-    using System.Threading.Tasks;
+    
 
     [Route("api/[controller]")]
    [ApiController]
@@ -58,17 +54,31 @@ namespace ApiVille.Controllers
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
+            var user = await _userManager.FindByNameAsync(model.Username);
+            if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
+            {
+                return Unauthorized("Invalid credentials");
+            }
 
-        var user = await _userManager.FindByNameAsync(model.Username);
-        if (user == null)
-            return Unauthorized("Credenziali non valide");
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault(); 
 
-        var isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
+            var token = _tokenService.CreateToken(user, roles);
+
+            return Ok(new
+            {
+                token = token,
+                ruolo = role,
+                username = user.UserName,
+                email = user.Email
+            });
+
+            var isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
         if (!isPasswordValid)
             return Unauthorized("Credenziali non valide");
 
-        var roles = await _userManager.GetRolesAsync(user);
-        var token = _tokenService.CreateToken(user, roles);
+        //var roles = await _userManager.GetRolesAsync(user);
+        //var token = _tokenService.CreateToken(user, roles);
 
         return Ok(new { token });
     }

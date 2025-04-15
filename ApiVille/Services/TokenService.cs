@@ -21,6 +21,7 @@ namespace ApiVille.Services
         {
             new Claim(ClaimTypes.Name, user.UserName),
             new Claim(ClaimTypes.NameIdentifier, user.Id),
+            //new Claim(ClaimTypes.Role, user.UserRole)
         };
 
             foreach (var role in roles)
