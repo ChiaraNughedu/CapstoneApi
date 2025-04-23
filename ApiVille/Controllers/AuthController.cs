@@ -1,86 +1,38 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using ApiVille.DTOs;
-using ApiVille.Models;
+﻿using ApiVille.DTOs;
 using ApiVille.Services;
-using ApiVille.Data;
-
+using Microsoft.AspNetCore.Mvc;
 
 namespace ApiVille.Controllers
 {
-    
-
+    [ApiController]
     [Route("api/[controller]")]
-   [ApiController]
-   public class AuthController : ControllerBase
-   {
-    private readonly UserManager<AppUser> _userManager;
-    private readonly TokenService _tokenService;
-
-    public AuthController(UserManager<AppUser> userManager, TokenService tokenService)
+    public class AuthController : ControllerBase
     {
-        _userManager = userManager;
-        _tokenService = tokenService;
-    }
+        private readonly AuthService _authService;
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterDto model)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        var user = new AppUser
+        public AuthController(AuthService authService)
         {
-            Nome = model.Nome,
-            Cognome = model.Cognome,
-            UserName = model.Username,
-            Email = model.Email
+            _authService = authService;
+        }
 
-        };
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterDto model)
+        {
+            var (success, errorMessage) = await _authService.RegisterAsync(model);
+            if (!success)
+                return BadRequest(errorMessage);
 
-        var result = await _userManager.CreateAsync(user, model.Password);
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
+            return Ok("Registrazione avvenuta con successo");
+        }
 
-        await _userManager.AddToRoleAsync(user, "User");
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginDto model)
+        {
+            var (success, errorMessage, tokenData) = await _authService.LoginAsync(model);
+            if (!success)
+                return Unauthorized(errorMessage);
 
-        return Ok(new { message = "Utente registrato correttamente" });
+            return Ok(tokenData);
+        }
     }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginDto model)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-            var user = await _userManager.FindByNameAsync(model.Username);
-            if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
-            {
-                return Unauthorized("Invalid credentials");
-            }
-
-            var roles = await _userManager.GetRolesAsync(user);
-            var role = roles.FirstOrDefault(); 
-
-            var token = _tokenService.CreateToken(user, roles);
-
-            return Ok(new
-            {
-                token = token,
-                ruolo = role,
-                username = user.UserName,
-                email = user.Email
-            });
-
-            var isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
-        if (!isPasswordValid)
-            return Unauthorized("Credenziali non valide");
-
-        //var roles = await _userManager.GetRolesAsync(user);
-        //var token = _tokenService.CreateToken(user, roles);
-
-        return Ok(new { token });
-    }
-   }
 }

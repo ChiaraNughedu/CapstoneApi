@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using System.Linq;
-using ApiVille.Data;
 using ApiVille.DTOs;
-using ApiVille.Models;
+using ApiVille.Services;
 
 namespace ApiVille.Controllers
 {
@@ -13,175 +10,55 @@ namespace ApiVille.Controllers
     [ApiController]
     public class VilleController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly VillaService _villaService;
 
-        public VilleController(ApplicationDbContext context)
+        public VilleController(VillaService villaService)
         {
-            _context = context;
+            _villaService = villaService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetVille()
         {
-            var ville = await _context.Ville
-                .Include(v => v.Categoria)
-                .Select(v => new VillaDto
-                {
-                    Id = v.Id,
-                    NomeVilla = v.NomeVilla,
-                    ImgCopertina = v.ImgCopertina,
-                    Immagine1 = v.Immagine1,
-                    Immagine2 = v.Immagine2,
-                    Immagine3 = v.Immagine3,
-                    Immagine4 = v.Immagine4,
-                    Immagine5 = v.Immagine5,
-                    Immagine6 = v.Immagine6, 
-                    Prezzo = v.Prezzo,
-                    Localita = v.Localita,
-                    Descrizione = v.Descrizione,
-                    CategoriaId = v.CategoriaId,
-                    NomeCategoria = v.Categoria.NomeCategoria
-                })
-                .ToListAsync();
-
+            var ville = await _villaService.GetVilleAsync();
             return Ok(ville);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetVilla(int id)
         {
-            var v = await _context.Ville
-                .Include(v => v.Categoria)
-                .FirstOrDefaultAsync(v => v.Id == id);
-
-            if (v == null)
-                return NotFound();
-
-            var villaDto = new VillaDto
-            {
-                Id = v.Id,
-                NomeVilla = v.NomeVilla,
-                ImgCopertina = v.ImgCopertina,
-                Immagine1 = v.Immagine1,
-                Immagine2 = v.Immagine2,
-                Immagine3 = v.Immagine3,
-                Immagine4 = v.Immagine4,
-                Immagine5 = v.Immagine5, 
-                Immagine6 = v.Immagine6, 
-                Prezzo = v.Prezzo,
-                Localita = v.Localita,
-                Descrizione = v.Descrizione,
-                CategoriaId = v.CategoriaId,
-                NomeCategoria = v.Categoria?.NomeCategoria ?? "N/A"
-            };
-
-            return Ok(villaDto);
+            var villa = await _villaService.GetVillaByIdAsync(id);
+            if (villa == null) return NotFound();
+            return Ok(villa);
         }
 
         [HttpGet("categoria/{categoriaId}")]
         public async Task<IActionResult> GetVilleByCategoria(int categoriaId)
         {
-            var categoria = await _context.Categorie.FindAsync(categoriaId);
-            if (categoria == null)
-                return NotFound(new { message = "Categoria non trovata" });
-
-            var ville = await _context.Ville
-                .Where(v => v.CategoriaId == categoriaId)
-                .Include(v => v.Categoria)
-                .Select(v => new VillaDto
-                {
-                    Id = v.Id,
-                    NomeVilla = v.NomeVilla,
-                    ImgCopertina = v.ImgCopertina,
-                    Immagine1 = v.Immagine1,
-                    Immagine2 = v.Immagine2,
-                    Immagine3 = v.Immagine3,
-                    Immagine4 = v.Immagine4,
-                    Immagine5 = v.Immagine5, 
-                    Immagine6 = v.Immagine6, 
-                    Prezzo = v.Prezzo,
-                    Localita = v.Localita,
-                    Descrizione = v.Descrizione,
-                    CategoriaId = v.CategoriaId,
-                    NomeCategoria = v.Categoria.NomeCategoria
-                })
-                .ToListAsync();
-
-            return Ok(ville);
+            var result = await _villaService.GetVilleByCategoriaAsync(categoriaId);
+            if (result == null) return NotFound(new { message = "Categoria non trovata" });
+            return Ok(result);
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateVilla([FromBody] VillaDto villaDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var categoriaEsiste = await _context.Categorie.AnyAsync(c => c.Id == villaDto.CategoriaId);
-            if (!categoriaEsiste)
-            {
+            var result = await _villaService.CreateVillaAsync(villaDto);
+            if (!result.Success)
                 return BadRequest(new { message = "La categoria specificata non esiste" });
-            }
 
-            var villa = new Villa
-            {
-                NomeVilla = villaDto.NomeVilla,
-                ImgCopertina = villaDto.ImgCopertina,
-                Immagine1 = villaDto.Immagine1,
-                Immagine2 = villaDto.Immagine2,
-                Immagine3 = villaDto.Immagine3,
-                Immagine4 = villaDto.Immagine4,
-                Immagine5 = villaDto.Immagine5, 
-                Immagine6 = villaDto.Immagine6, 
-                Prezzo = villaDto.Prezzo,
-                Localita = villaDto.Localita,
-                CategoriaId = villaDto.CategoriaId,
-                Descrizione = villaDto.Descrizione
-            };
-
-            _context.Ville.Add(villa);
-            await _context.SaveChangesAsync();
-
-            villaDto.Id = villa.Id;
-
-            return CreatedAtAction(nameof(GetVilla), new { id = villa.Id }, villaDto);
+            return CreatedAtAction(nameof(GetVilla), new { id = result.Result?.Id }, result);
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateVilla(int id, [FromBody] VillaDto villaDto)
         {
-            if (id != villaDto.Id)
-                return BadRequest("L'ID della villa non corrisponde");
-
-            var villa = await _context.Ville.FindAsync(id);
-            if (villa == null)
-                return NotFound();
-
-            if (villaDto.CategoriaId > 0)
-            {
-                var categoriaEsiste = await _context.Categorie.AnyAsync(c => c.Id == villaDto.CategoriaId);
-                if (!categoriaEsiste)
-                {
-                    return BadRequest(new { message = "La categoria specificata non esiste" });
-                }
-                villa.CategoriaId = villaDto.CategoriaId;
-            }
-
-            villa.NomeVilla = villaDto.NomeVilla;
-            villa.ImgCopertina = villaDto.ImgCopertina;
-            villa.Immagine1 = villaDto.Immagine1;
-            villa.Immagine2 = villaDto.Immagine2;
-            villa.Immagine3 = villaDto.Immagine3;
-            villa.Immagine4 = villaDto.Immagine4;
-            villa.Immagine5 = villaDto.Immagine5;  
-            villa.Immagine6 = villaDto.Immagine6;  
-            villa.Prezzo = villaDto.Prezzo;
-            villa.Localita = villaDto.Localita;
-            villa.Descrizione = villaDto.Descrizione;
-
-            await _context.SaveChangesAsync();
-
+            var result = await _villaService.UpdateVillaAsync(id, villaDto);
+            if (!result) return BadRequest("Errore durante l'aggiornamento della villa.");
             return NoContent();
         }
 
@@ -189,33 +66,18 @@ namespace ApiVille.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateVillaCategoria(int id, [FromBody] int categoriaId)
         {
-            var villa = await _context.Ville.FindAsync(id);
-            if (villa == null)
-                return NotFound(new { message = "Villa non trovata" });
-
-            var categoriaEsiste = await _context.Categorie.AnyAsync(c => c.Id == categoriaId);
-            if (!categoriaEsiste)
-                return BadRequest(new { message = "La categoria specificata non esiste" });
-
-            villa.CategoriaId = categoriaId;
-
-            _context.Ville.Update(villa);
-            await _context.SaveChangesAsync();
-
+            var result = await _villaService.UpdateVillaCategoriaAsync(id, categoriaId);
+            if (!result) return BadRequest("Errore durante l'aggiornamento della categoria della villa.");
             return NoContent();
         }
+
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteVilla(int id)
         {
-            var villa = await _context.Ville.FindAsync(id);
-            if (villa == null)
-                return NotFound();
-
-            _context.Ville.Remove(villa);
-            await _context.SaveChangesAsync();
-
+            var deleted = await _villaService.DeleteVillaAsync(id);
+            if (!deleted) return NotFound();
             return NoContent();
         }
 
@@ -223,25 +85,16 @@ namespace ApiVille.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateAllVilleCategorie(int categoriaId)
         {
-            var categoriaEsiste = await _context.Categorie.AnyAsync(c => c.Id == categoriaId);
-            if (!categoriaEsiste)
-                return BadRequest(new { message = "La categoria specificata non esiste" });
+            var result = await _villaService.UpdateAllVilleCategorieAsync(categoriaId);
 
-            var villeNonAssegnate = await _context.Ville
-                .Where(v => v.CategoriaId == 0 || v.CategoriaId == null)
-                .ToListAsync();
+            if (!result.success)
+                return BadRequest(new { message = result.message });
 
-            if (!villeNonAssegnate.Any())
-                return NotFound(new { message = "Non ci sono ville senza categoria" });
+            if (result.updatedCount == 0)
+                return NotFound(new { message = result.message });
 
-            foreach (var villa in villeNonAssegnate)
-            {
-                villa.CategoriaId = categoriaId;
-            }
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = $"Aggiornate {villeNonAssegnate.Count} ville alla categoria specificata" });
+            return Ok(new { message = $"Aggiornate {result.updatedCount} ville alla categoria specificata" });
         }
+
     }
 }

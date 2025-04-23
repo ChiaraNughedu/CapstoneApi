@@ -49,6 +49,11 @@ builder.Services.AddAuthorization();
 
 // Registrazione TokenService
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<PrenotazioniService>();
+builder.Services.AddScoped<VillaService>();
+builder.Services.AddScoped<CategoriaService>();
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
