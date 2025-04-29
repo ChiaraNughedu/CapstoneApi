@@ -93,7 +93,7 @@ namespace ApiVille.Services
                 .ToListAsync();
         }
 
-        public async Task<(bool Success, string? ErrorMessage, VillaDto? Result)> CreateVillaAsync(VillaDto dto)
+        public async Task<(bool Success, string? ErrorMessage, VillaDto? Result)> CreateVillaAsync(VillaCreateDto dto)
         {
             if (!await _context.Categorie.AnyAsync(c => c.Id == dto.CategoriaId))
                 return (false, "La categoria specificata non esiste", null);
@@ -117,11 +117,12 @@ namespace ApiVille.Services
             _context.Ville.Add(villa);
             await _context.SaveChangesAsync();
 
-            dto.Id = villa.Id;
-            return (true, null, dto);
+            var villaDto = await GetVillaByIdAsync(villa.Id);
+
+            return (true, null, villaDto);
         }
 
-        public async Task<bool> UpdateVillaAsync(int id, VillaDto dto)
+        public async Task<bool> UpdateVillaAsync(int id, VillaCreateDto dto)
         {
             var villa = await _context.Ville.FindAsync(id);
             if (villa == null) return false;
@@ -168,7 +169,6 @@ namespace ApiVille.Services
             return true;
         }
 
-
         public async Task<(bool success, string message, int updatedCount)> UpdateAllVilleCategorieAsync(int categoriaId)
         {
             if (!await _context.Categorie.AnyAsync(c => c.Id == categoriaId))
@@ -187,7 +187,5 @@ namespace ApiVille.Services
             await _context.SaveChangesAsync();
             return (true, "Categoria aggiornata correttamente", ville.Count);
         }
-
     }
 }
-

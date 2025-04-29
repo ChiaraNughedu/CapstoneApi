@@ -14,6 +14,8 @@ namespace ApiVille.Data
         public DbSet<Villa> Ville { get; set; }
         public DbSet<Prenotazione> Prenotazioni { get; set; }
         public DbSet<Categoria> Categorie { get; set; }
+        public DbSet<Articolo> Articoli { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

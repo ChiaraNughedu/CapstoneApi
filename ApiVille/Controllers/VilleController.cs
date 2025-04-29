@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using ApiVille.DTOs;
 using ApiVille.Services;
+using ApiVille.DTOs;
+
 
 namespace ApiVille.Controllers
 {
@@ -42,22 +43,22 @@ namespace ApiVille.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateVilla([FromBody] VillaDto villaDto)
+        public async Task<IActionResult> CreateVilla([FromBody] VillaCreateDto villaCreateDto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var result = await _villaService.CreateVillaAsync(villaDto);
+            var result = await _villaService.CreateVillaAsync(villaCreateDto);
             if (!result.Success)
-                return BadRequest(new { message = "La categoria specificata non esiste" });
+                return BadRequest(new { message = result.ErrorMessage });
 
-            return CreatedAtAction(nameof(GetVilla), new { id = result.Result?.Id }, result);
+            return CreatedAtAction(nameof(GetVilla), new { id = result.Result?.Id }, result.Result);
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateVilla(int id, [FromBody] VillaDto villaDto)
+        public async Task<IActionResult> UpdateVilla(int id, [FromBody] VillaCreateDto villaCreateDto)
         {
-            var result = await _villaService.UpdateVillaAsync(id, villaDto);
+            var result = await _villaService.UpdateVillaAsync(id, villaCreateDto);
             if (!result) return BadRequest("Errore durante l'aggiornamento della villa.");
             return NoContent();
         }
@@ -70,7 +71,6 @@ namespace ApiVille.Controllers
             if (!result) return BadRequest("Errore durante l'aggiornamento della categoria della villa.");
             return NoContent();
         }
-
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
@@ -95,6 +95,5 @@ namespace ApiVille.Controllers
 
             return Ok(new { message = $"Aggiornate {result.updatedCount} ville alla categoria specificata" });
         }
-
     }
 }

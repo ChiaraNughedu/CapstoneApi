@@ -47,12 +47,14 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Registrazione TokenService
+// Registrazione Service
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<PrenotazioniService>();
 builder.Services.AddScoped<VillaService>();
 builder.Services.AddScoped<CategoriaService>();
+builder.Services.AddScoped<ArticoloService>();
+
 
 
 builder.Services.AddControllers();
@@ -63,7 +65,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin() // Porta di Vite/React
+        policy.AllowAnyOrigin() 
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
